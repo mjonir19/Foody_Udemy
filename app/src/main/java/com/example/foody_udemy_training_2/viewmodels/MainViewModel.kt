@@ -40,6 +40,13 @@ class MainViewModel @ViewModelInject constructor(
         getRecipesSafeCall(queries)
     }
 
+    // created new variable and function (searchRecipes) for searching recipes
+    var searchedRecipesResponse: MutableLiveData<NetworkResult<FoodRecipe>> = MutableLiveData()
+    
+    fun searchRecipes(searchQuery: Map<String, String>) = viewModelScope.launch { 
+        searchRecipesSafeCall(searchQuery)
+    }
+
     private suspend fun getRecipesSafeCall(queries: Map<String, String>) {
         recipesResponse.value = NetworkResult.Loading()
         if (hasInternetConnection()) {
@@ -63,6 +70,23 @@ class MainViewModel @ViewModelInject constructor(
             }
         } else {
             recipesResponse.value = NetworkResult.Error("No Internet Connection.")
+        }
+    }
+
+    // created function for safe call in searchRecipes
+    private suspend fun searchRecipesSafeCall(searchQuery: Map<String, String>) {
+        searchedRecipesResponse.value = NetworkResult.Loading()
+        if (hasInternetConnection()) {
+            try {
+
+                val response = repository.remote.searchRecipes(searchQuery)
+                searchedRecipesResponse.value = handleFoodRecipesResponse(response)
+
+            } catch (e: Exception) {
+                searchedRecipesResponse.value = NetworkResult.Error("Recipes not found.")
+            }
+        } else {
+            searchedRecipesResponse.value = NetworkResult.Error("No Internet Connection.")
         }
     }
 
