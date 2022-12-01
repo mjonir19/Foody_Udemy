@@ -1,9 +1,12 @@
 package com.example.foody_udemy_training_2.data.database
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import com.example.foody_udemy_training_2.data.database.entities.FavoritesEntity
+import com.example.foody_udemy_training_2.data.database.entities.RecipesEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -28,5 +31,21 @@ interface RecipesDao {
     // creating SELECT query from recipes table ordered by ID and ascending
     @Query("SELECT * FROM recipes_table ORDER BY id ASC")
     fun readRecipes(): Flow<List<RecipesEntity>>
+
+    // create a function to insert favorites in our database
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertFavoriteRecipe(favoritesEntity: FavoritesEntity)
+
+    // function that read the favorites recipe
+    @Query("SELECT * FROM favorites_recipes_table ORDER BY id ASC")
+    fun readFavoriteRecipes(): Flow<List<FavoritesEntity>>
+
+    // function that deletes certain favorite
+    @Delete
+    suspend fun deleteFavoriteRecipe(favoritesEntity: FavoritesEntity)
+
+    // function that deletes the table
+    @Query("DELETE FROM favorites_recipes_table")
+    suspend fun deleteAllFavoriteRecipes()
 
 }

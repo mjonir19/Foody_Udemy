@@ -3,9 +3,11 @@ package com.example.foody_udemy_training_2.util
 import androidx.recyclerview.widget.DiffUtil
 import com.example.foody_udemy_training_2.models.Result
 
-class RecipesDiffUtil(
-    private val oldList: List<Result>,
-    private val newList: List<Result>
+// added <T> for generics
+class RecipesDiffUtil<T>(
+    // removed Result and used generics
+    private val oldList: List<T>,
+    private val newList: List<T>
 ): DiffUtil.Callback() {
     override fun getOldListSize(): Int {
         return oldList.size
