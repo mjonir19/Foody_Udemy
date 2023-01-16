@@ -20,7 +20,6 @@ import com.example.foody_udemy_training_2.util.NetworkResult
 import com.example.foody_udemy_training_2.util.observeOnce
 import com.example.foody_udemy_training_2.viewmodels.RecipesViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.android.synthetic.main.fragment_recipes.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
@@ -52,7 +51,7 @@ class RecipesFragment : Fragment(), SearchView.OnQueryTextListener {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         // Inflate the layout for this fragment
         _binding = FragmentRecipesBinding.inflate(inflater, container, false)
         binding.lifecycleOwner = this
@@ -73,7 +72,8 @@ class RecipesFragment : Fragment(), SearchView.OnQueryTextListener {
             recipesViewModel.backOnline = it
         }
 
-        lifecycleScope.launch {
+        // for error change launchWhenStarted if we received crash error onDestroyView() coroutine
+        lifecycleScope.launchWhenStarted {
             //Initialize NetworkListener and added annotation for NetworkListener
             networkListener = NetworkListener()
             // this function (checkNetworkAvailability) returns a MutableStateFlow which is a boolean value,
@@ -228,8 +228,8 @@ class RecipesFragment : Fragment(), SearchView.OnQueryTextListener {
         binding.recyclerview.hideShimmer()
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
+    override fun onDestroyView() {
+        super.onDestroyView()
         _binding = null
     }
 

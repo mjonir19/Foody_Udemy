@@ -6,7 +6,9 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.example.foody_udemy_training_2.data.database.entities.FavoritesEntity
+import com.example.foody_udemy_training_2.data.database.entities.FoodJokeEntity
 import com.example.foody_udemy_training_2.data.database.entities.RecipesEntity
+import com.example.foody_udemy_training_2.models.FoodJoke
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -32,6 +34,8 @@ interface RecipesDao {
     @Query("SELECT * FROM recipes_table ORDER BY id ASC")
     fun readRecipes(): Flow<List<RecipesEntity>>
 
+    /** FAVORITE RECIPE */
+
     // create a function to insert favorites in our database
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertFavoriteRecipe(favoritesEntity: FavoritesEntity)
@@ -47,5 +51,15 @@ interface RecipesDao {
     // function that deletes the table
     @Query("DELETE FROM favorites_recipes_table")
     suspend fun deleteAllFavoriteRecipes()
+
+    /** FOOD JOKE */
+
+    // .REPLACE means whenever we get a new data from our API, we want to replace the
+    // old data with that new data and we're only able to get 1 row since autogenerate is false
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertFoodJoke(foodJokeEntity: FoodJokeEntity)
+
+    @Query("SELECT * FROM food_joke_table ORDER BY id ASC")
+    fun readFoodJoke(): Flow<List<FoodJokeEntity>>
 
 }

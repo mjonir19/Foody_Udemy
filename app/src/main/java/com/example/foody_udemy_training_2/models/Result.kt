@@ -2,8 +2,8 @@ package com.example.foody_udemy_training_2.models
 
 import android.os.Parcelable
 import com.google.gson.annotations.SerializedName
-import kotlinx.android.parcel.Parcelize
-import kotlinx.android.parcel.RawValue
+import kotlinx.parcelize.Parcelize
+import kotlinx.parcelize.RawValue
 
 // parcelize to enable it in my_nav.xml
 @Parcelize

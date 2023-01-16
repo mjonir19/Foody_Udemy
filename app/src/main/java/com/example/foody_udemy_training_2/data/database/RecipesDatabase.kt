@@ -4,11 +4,12 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.example.foody_udemy_training_2.data.database.entities.FavoritesEntity
+import com.example.foody_udemy_training_2.data.database.entities.FoodJokeEntity
 import com.example.foody_udemy_training_2.data.database.entities.RecipesEntity
 
 @Database(
     // added favoritesEntity class and it made 2 database
-    entities = [RecipesEntity::class, FavoritesEntity::class],
+    entities = [RecipesEntity::class, FavoritesEntity::class, FoodJokeEntity::class],
     // whenever you change your database schema, you need to increase this version number
     // made version = 2, because we added a new database
     version = 1,

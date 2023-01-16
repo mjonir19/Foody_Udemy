@@ -13,10 +13,11 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme"
+        android:theme="@style/SplashScreenStyle"
         android:usesCleartextTraffic="true">
         <activity
             android:name=".ui.DetailsActivity"
+            android:screenOrientation="portrait"
             android:label="Details"
             android:theme="@style/DetailsActivityStyle"
             android:exported="false" >
@@ -25,7 +26,8 @@
                 android:value="" />
         </activity>
         <activity
-            android:name=".ui.MainActivity">
+            android:name=".ui.MainActivity"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

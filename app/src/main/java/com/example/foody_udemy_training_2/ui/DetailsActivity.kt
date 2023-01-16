@@ -11,18 +11,21 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.navArgs
 import com.example.foody_udemy_training_2.R
 import com.example.foody_udemy_training_2.data.database.entities.FavoritesEntity
+import com.example.foody_udemy_training_2.databinding.ActivityDetailsBinding
 import com.example.foody_udemy_training_2.ui.fragments.ingredients.IngredientsFragment
 import com.example.foody_udemy_training_2.ui.fragments.instructions.InstructionsFragment
 import com.example.foody_udemy_training_2.ui.fragments.overview.OverviewFragment
 import com.example.foody_udemy_training_2.util.Constants.Companion.RECIPE_RESULT_KEY
 import com.example.foody_udemy_training_2.viewmodels.MainViewModel
 import com.google.android.material.snackbar.Snackbar
+import com.google.android.material.tabs.TabLayoutMediator
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.android.synthetic.main.activity_details.*
 
 //added annotation for dependency injection to create an instance in MainViewModel, because we are using our MainViewModel inside this class
 @AndroidEntryPoint
 class DetailsActivity : AppCompatActivity() {
+
+    private lateinit var binding: ActivityDetailsBinding
 
     // before we initialize the pagerAdapter, we need to create a bundle object,
     // but in order to create a bundle object, we need to get the values or the data from our safe args
@@ -38,11 +41,12 @@ class DetailsActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_details)
+        binding = ActivityDetailsBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         // setup actionbar
-        setSupportActionBar(toolbar)
-        toolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.white))
+        setSupportActionBar(binding.toolbar)
+        binding.toolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.white))
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         // create arraylist of fragments
@@ -64,16 +68,22 @@ class DetailsActivity : AppCompatActivity() {
         resultBundle.putParcelable(RECIPE_RESULT_KEY, args.result)
 
         // initialize pagerAdapter, be careful for inputting the parameters it should be in order
-        val adapter = com.example.foody_udemy_training_2.adapters.PagerAdapter(
+        val pagerAdapter = com.example.foody_udemy_training_2.adapters.PagerAdapter(
             resultBundle,
             fragments,
-            titles,
-            supportFragmentManager
+            this
         )
 
+
         // call view pager
-        viewPager.adapter = adapter
-        tabLayout.setupWithViewPager(viewPager)
+        binding.viewPager2.apply {
+            adapter = pagerAdapter
+        }
+
+        // set the titles properly
+        TabLayoutMediator(binding.tabLayout, binding.viewPager2) { tab, position ->
+            tab.text = titles[position]
+        }.attach()
     }
 
     // added for favorites icon
@@ -160,7 +170,7 @@ class DetailsActivity : AppCompatActivity() {
     // show snack bar if you add the recipe to favorites
     private fun showSnackBar(message: String) {
         Snackbar.make(
-            detailsLayout,
+            binding.detailsLayout,
             message,
             Snackbar.LENGTH_SHORT
         ).setAction("Okay"){}

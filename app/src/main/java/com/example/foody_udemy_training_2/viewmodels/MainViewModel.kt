@@ -8,7 +8,9 @@ import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.*
 import com.example.foody_udemy_training_2.data.Repository
 import com.example.foody_udemy_training_2.data.database.entities.FavoritesEntity
+import com.example.foody_udemy_training_2.data.database.entities.FoodJokeEntity
 import com.example.foody_udemy_training_2.data.database.entities.RecipesEntity
+import com.example.foody_udemy_training_2.models.FoodJoke
 import com.example.foody_udemy_training_2.models.FoodRecipe
 import com.example.foody_udemy_training_2.util.NetworkResult
 import kotlinx.coroutines.Dispatchers
@@ -27,8 +29,11 @@ class MainViewModel @ViewModelInject constructor(
     // as extension function to convert our flow to a live data
     val readRecipes: LiveData<List<RecipesEntity>> = repository.local.readRecipes().asLiveData()
 
-    // initialize favorite recipes LiveData
+    // initialize favorite recipes LiveData for favorite recipes
     val readFavoriteRecipes: LiveData<List<FavoritesEntity>> = repository.local.readFavoriteRecipes().asLiveData()
+
+    // initialize food joke LiveData for food joke
+    val readFoodJoke: LiveData<List<FoodJokeEntity>> = repository.local.readFoodJoke().asLiveData()
 
     private fun insertRecipes(recipesEntity: RecipesEntity) =
         // added Dispatchers.IO because we are running a database work
@@ -36,6 +41,8 @@ class MainViewModel @ViewModelInject constructor(
             // call repository.local.insertRecipes(recipesEntity) passing recipesEntity from the parameters of this function
             repository.local.insertRecipes(recipesEntity)
         }
+
+    /** ROOM FAVORITE RECIPE */
 
     // added functions for favorite recipe
     fun insertFavoriteRecipe(favoritesEntity: FavoritesEntity) =
@@ -53,18 +60,60 @@ class MainViewModel @ViewModelInject constructor(
             repository.local.deleteAllFavoriteRecipes()
         }
 
+    /** ROOM FOOD JOKE  */
+    fun insertFoodJoke(foodJokeEntity: FoodJokeEntity) =
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.local.insertFoodJoke(foodJokeEntity)
+        }
+
+
     /** RETROFIT */
     var recipesResponse: MutableLiveData<NetworkResult<FoodRecipe>> = MutableLiveData()
+
+    // created new variable and function (searchRecipes) for searching recipes
+    var searchedRecipesResponse: MutableLiveData<NetworkResult<FoodRecipe>> = MutableLiveData()
+
+    // create a mutable live data for FoodJokeFragment
+    var foodJokeResponse: MutableLiveData<NetworkResult<FoodJoke>> = MutableLiveData()
+
+    /** API CALL FUNCTIONS */
 
     fun getRecipes(queries: Map<String, String>) = viewModelScope.launch {
         getRecipesSafeCall(queries)
     }
 
-    // created new variable and function (searchRecipes) for searching recipes
-    var searchedRecipesResponse: MutableLiveData<NetworkResult<FoodRecipe>> = MutableLiveData()
-    
     fun searchRecipes(searchQuery: Map<String, String>) = viewModelScope.launch { 
         searchRecipesSafeCall(searchQuery)
+    }
+
+    fun getFoodJoke(apiKey: String) = viewModelScope.launch {
+        getFoodJokeSafeCall(apiKey)
+    }
+
+    /** SAFE CALLS */
+
+    // this function should have a suspend keyword here because it uses kotlin coroutine's (safe calls should have coroutines)
+    private suspend fun getFoodJokeSafeCall(apiKey: String) {
+        foodJokeResponse.value = NetworkResult.Loading()
+        if (hasInternetConnection()) {
+            try {
+
+                val response = repository.remote.getFoodJoke(apiKey)
+                foodJokeResponse.value = handleFoodJokeResponse(response)
+
+                //initialize food joke to offline cache if there is no internet connection
+                val foodJoke = foodJokeResponse.value!!.data
+
+                if(foodJoke != null) {
+                    offlineCacheFoodJoke(foodJoke)
+                }
+
+            } catch (e: Exception) {
+                foodJokeResponse.value = NetworkResult.Error("Recipes not found.")
+            }
+        } else {
+            foodJokeResponse.value = NetworkResult.Error("No Internet Connection.")
+        }
     }
 
     private suspend fun getRecipesSafeCall(queries: Map<String, String>) {
@@ -83,7 +132,6 @@ class MainViewModel @ViewModelInject constructor(
                 if(foodRecipe != null) {
                     offlineCacheRecipes(foodRecipe)
                 }
-
 
             } catch (e: Exception) {
                 recipesResponse.value = NetworkResult.Error("Recipes not found.")
@@ -110,13 +158,6 @@ class MainViewModel @ViewModelInject constructor(
         }
     }
 
-    // created one parameter and it is food recipe
-    private fun offlineCacheRecipes(foodRecipe: FoodRecipe) {
-        val recipesEntity = RecipesEntity(foodRecipe)
-
-        insertRecipes(recipesEntity)
-    }
-
     private fun handleFoodRecipesResponse(response: Response<FoodRecipe>): NetworkResult<FoodRecipe>? {
         when {
             response.message().toString().contains("timeout") -> {
@@ -138,6 +179,24 @@ class MainViewModel @ViewModelInject constructor(
         }
     }
 
+    private fun handleFoodJokeResponse(response: Response<FoodJoke>): NetworkResult<FoodJoke>? {
+        return when {
+            response.message().toString().contains("timeout") -> {
+                NetworkResult.Error("Timeout")
+            }
+            response.code() == 402 -> {
+                NetworkResult.Error("API Key Limited.")
+            }
+            response.isSuccessful -> {
+                val foodJoke = response.body()
+                NetworkResult.Success(foodJoke!!)
+            }
+            else -> {
+                NetworkResult.Error(response.message())
+            }
+        }
+    }
+
     private fun hasInternetConnection(): Boolean {
         val connectivityManager = getApplication<Application>().getSystemService(
             Context.CONNECTIVITY_SERVICE
@@ -150,6 +209,22 @@ class MainViewModel @ViewModelInject constructor(
             capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> true
             else -> false
         }
+    }
+
+    /** OFFLINE CACHING*/
+
+    // created one parameter and it is food recipe
+    private fun offlineCacheRecipes(foodRecipe: FoodRecipe) {
+        val recipesEntity = RecipesEntity(foodRecipe)
+
+        insertRecipes(recipesEntity)
+    }
+
+    // created offline cache for food joke
+    private fun offlineCacheFoodJoke(foodJoke: FoodJoke) {
+        val foodJokeEntity = FoodJokeEntity(foodJoke)
+
+        insertFoodJoke(foodJokeEntity)
     }
 
 }
